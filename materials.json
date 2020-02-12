@@ -1,0 +1,240 @@
+{"1": {
+  "name": "Хром-30-70",
+  "min_res": 10,
+  "max_res": 500,
+  "power": 1,
+  "min_tks": 1.8,
+  "max_tks": 2,
+  "min_error": 0,
+  "max_error": 0
+},
+"2": {
+  "name": "Хром ГОСТ(5905-67)",
+  "min_res": 200,
+  "max_res": 500,
+  "power": 1,
+  "min_tks": 0.6,
+  "max_tks": 0.6,
+  "min_error": 0,
+  "max_error": 0
+},
+"3": {
+  "name": "Хром",
+  "min_res": 10,
+  "max_res": 50,
+  "power": 1,
+  "min_tks": -2.5,
+  "max_tks": -2.5,
+  "min_error": 1.5,
+  "max_error": 1.5
+},
+"4": {
+  "name": "Тантал",
+  "min_res": 10,
+  "max_res": 100,
+  "power": 3,
+  "min_tks": -2,
+  "max_tks": -2,
+  "min_error": 0,
+  "max_error": 0
+},
+"5": {
+  "name": "Рений",
+  "min_res": 300,
+  "max_res": 7000,
+  "power": 3,
+  "min_tks": 0,
+  "max_tks": 20,
+  "min_error": 0,
+  "max_error": 0
+},
+"6": {
+  "name": " Нихром ГОСТ(12766-67)",
+  "min_res": 50,
+  "max_res": 300,
+  "power": 2,
+  "min_tks": 2.5,
+  "max_tks": 2.5,
+  "min_error": 0,
+  "max_error": 0
+},
+"7": {
+  "name": "Нихром ГОСТ(1803-58)",
+  "min_res": 10,
+  "max_res": 50,
+  "power": 2,
+  "min_tks": -2.25,
+  "max_tks": -2.25,
+  "min_error": 0,
+  "max_error": 0
+},
+"8": {
+  "name": "Сплав МЛТ-34",
+  "min_res": 200,
+  "max_res": 500,
+  "power": 2,
+  "min_tks": 1.2,
+  "max_tks": 2.4,
+  "min_error": -0.5,
+  "max_error": 0.5
+},
+"9": {
+  "name": "Кермент К20С",
+  "min_res": 1000,
+  "max_res": 3000,
+  "power": 2,
+  "min_tks": 0.5,
+  "max_tks": 0.5,
+  "min_error": 0,
+  "max_error": 0
+},
+"10": {
+  "name": "Сплав РС1004",
+  "min_res": 3000,
+  "max_res": 50000,
+  "power": 5,
+  "min_tks": 15,
+  "max_tks": 15,
+  "min_error": 2,
+  "max_error": 2
+},
+"11": {
+  "name": "Сплав РС1714",
+  "min_res": 300,
+  "max_res": 500,
+  "power": 5,
+  "min_tks": 2,
+  "max_tks": 2,
+  "min_error": 1,
+  "max_error": 1
+},
+"12": {
+  "name": "Нитрид тантала",
+  "min_res": 200,
+  "max_res": 200,
+  "power": 3,
+  "min_tks": 0,
+  "max_tks": 0,
+  "min_error": 0.2,
+  "max_error": 0.2
+},
+"13": {
+  "name": "Кермент К50",
+  "min_res": 1000,
+  "max_res": 10000,
+  "power": 2,
+  "min_tks": -5,
+  "max_tks": 3,
+  "min_error": 0,
+  "max_error": 0
+},
+"14": {
+  "name": "Сплав РС2005",
+  "min_res": 80000,
+  "max_res": 500000,
+  "power": 5,
+  "min_tks": 12,
+  "max_tks": 12,
+  "min_error": 2,
+  "max_error": 2
+},
+"15": {
+  "name": "Сплав РС2310",
+  "min_res": 10000,
+  "max_res": 80000,
+  "power": 5,
+  "min_tks": 1,
+  "max_tks": 1,
+  "min_error": 0.5,
+  "max_error": 0.5
+},
+"16": {
+  "name": "Сплав РС3001",
+  "min_res": 800,
+  "max_res": 3000,
+  "power": 5,
+  "min_tks": 1,
+  "max_tks": 1,
+  "min_error": 0.5,
+  "max_error": 0.5
+},
+"17": {
+  "name": "Сплав РС3710",
+  "min_res": 50,
+  "max_res": 3000,
+  "power": 5,
+  "min_tks": 1,
+  "max_tks": 1,
+  "min_error": 0.5,
+  "max_error": 0.5
+},
+"18": {
+  "name": "Сплав РС4206",
+  "min_res": 1000,
+  "max_res": 1000,
+  "power": 2,
+  "min_tks": 0.5,
+  "max_tks": 0.5,
+  "min_error": 0.5,
+  "max_error": 0.5
+},
+"19": {
+  "name": "Сплав РС4400",
+  "min_res": 1000,
+  "max_res": 5000,
+  "power": 10,
+  "min_tks": 3,
+  "max_tks": 3,
+  "min_error": 0,
+  "max_error": 0
+},
+"20": {
+  "name": "Сплав РС4800",
+  "min_res": 100,
+  "max_res": 1000,
+  "power": 5,
+  "min_tks": 2,
+  "max_tks": 2,
+  "min_error": 1,
+  "max_error": 1
+},
+"21": {
+  "name": "Сплав РС5402",
+  "min_res": 5,
+  "max_res": 100,
+  "power": 5,
+  "min_tks": 0.5,
+  "max_tks": 0.5,
+  "min_error": 1,
+  "max_error": 1
+},
+"22": {
+  "name": "Сплав РС5006",
+  "min_res": 3,
+  "max_res": 20,
+  "power": 5,
+  "min_tks": 0.5,
+  "max_tks": 0.5,
+  "min_error": 2,
+  "max_error": 2
+},
+"23": {
+  "name": "Сплав 5406К",
+  "min_res": 100,
+  "max_res": 500,
+  "power": 2,
+  "min_tks": 0.5,
+  "max_tks": 0.5,
+  "min_error": 1,
+  "max_error": 1
+},
+"24": {
+  "name": "Сплав 5406Н",
+  "min_res": 50,
+  "max_res": 500,
+  "power": 2,
+  "min_tks": 0.3,
+  "max_tks": 0.3,
+  "min_error": 1,
+  "max_error": 1
+}}
