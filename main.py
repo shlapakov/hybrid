@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 import json
-import time
 
 TKS_TEXT = 'Укажите ТКС'
 ERROR_TEXT = 'Укажите погрешность старения'
 MASK = 0.3
 LITHOGRAPHY = 0.1
 method = ...
+start_x_point = 0
 
 
 def data_for_table(data_to_change):
@@ -50,8 +50,8 @@ def spawn_fields():
 def spawn_ro_opt():
     global ro_square
     if 0 not in data_for_table(data[0]):
-        ro_opt = (sum(data_for_table(data[0])) / sum([1 / i for i in data_for_table(data[0])])) ** 0.5
-        ro_square = st.number_input('Введите ро квадрат (рекомендуется {})'.format(ro_opt))
+        ro_opt = round((sum(data_for_table(data[0])) / sum([1 / i for i in data_for_table(data[0])])) ** 0.5) // 10 * 10
+        ro_square = st.number_input('Введите ро квадрат (рекомендуется {})'.format(ro_opt), step=10.0)
     return ro_square
 
 
@@ -127,7 +127,7 @@ def calc_forms_coefs():
     if ro_square >= 3:
         coefs = []
         for resistor in data_for_table(data[0]):
-            coefficient = resistor / ro_square
+            coefficient = round(resistor / ro_square, 1)
             coefs.append(coefficient)
         return coefs
 
@@ -166,29 +166,35 @@ def spawn_coefficients_and_errors_info():
 
 
 def rectangle(p, r, p0, kf, ykf, side):
+    global start_x_point
+    global autocad_text
     bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
-    print(ro_square, p, r, p0)
     b_delta = (0.01 + kf + 0.01) / ykf
-    length = max(bp, b_delta) * kf
-    if side == 'b':
-        st.text('Ширина - {}мм, Длина - {}мм'.format(max(bp, b_delta), length))
-    else:
-        st.text('Длина - {}мм, Ширина - {}мм'.format(max(bp, b_delta), length))
+    b = round(max(bp, b_delta),2)
+    length = round(b * kf, 2)
+
+    if side != 'b':
+        b,length = length,b
+    st.text(f'Ширина - {b}мм, Длина - {length}мм')
+    text_to_add = f'RECTANG {start_x_point},0 {b+start_x_point},{length}\n'
+    st.text(text_to_add)
+    autocad_text += text_to_add
+    start_x_point += length+5
 
 
 def meander(p, r, p0, kf, ykf):
     bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
     b_delta = (0.01 + 0.01 / kf) / ykf
     b = max(b_delta, bp)
-    a = b
+    # a = b
     print(bp)
     l_average = b * kf
-    t = a + b
+    t = b * 2
     n_optimal = int((l_average / t) ** 0.5 + 1)
     n = st.slider('Укажите количество звеньев. Оптимальное количество: {}'.format(n_optimal),
                   0, 10, n_optimal)
-    length_meandr = n * (a + b)
-    width_meandr = (l_average - a * n) / 3
+    length_meandr = n * t
+    width_meandr = (l_average - b * n) / 3
     st.text('Длина меандра - {}'.format(length_meandr))
     st.text('Ширина меандра - {}'.format(width_meandr))
 
@@ -242,7 +248,7 @@ def sizes():
                         p0=material['power'],
                         kf=form_coefs[i])
 
-
+autocad_text = ''
 st.title('Расчет резисторов')
 number_of_resistors = st.number_input('Количество резисторов', 1)
 max_temperature = st.number_input('Максимальная температура ', 40)
@@ -266,3 +272,4 @@ if l_tech == 'Масочный':
 elif l_tech == 'Фотолитография':
     method = LITHOGRAPHY
 sizes()
+st.text(autocad_text)
