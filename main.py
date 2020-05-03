@@ -5,7 +5,7 @@ import json
 TKS_TEXT = 'Укажите ТКС'
 ERROR_TEXT = 'Укажите погрешность старения'
 MASK = 0.3
-LITHOGRAPHY = 0.1
+LITHOGRAPHY = 0.05
 method = ...
 start_x_point = 0
 
@@ -179,28 +179,84 @@ def rectangle(p, r, p0, kf, ykf, side):
     text_to_add = f'COLOR ByLayer\n' \
                   f'RECTANG {start_x_point},0 {b+start_x_point},{length}\n' \
                   f'COLOR RED\n' \
-                  f'LINE {round(start_x_point+0.18,2)},0 {round(start_x_point+0.18,2)},{length}\n' \
+                  f'LINE {round(start_x_point+0.09,2)},0 {round(start_x_point+0.09,2)},{length}\n' \
                   f'X\n' \
-                  f'LINE {round(start_x_point+b-0.18,2)},0 {round(start_x_point+b-0.18,2)},{length}\n' \
+                  f'LINE {round(start_x_point+b-0.09,2)},0 {round(start_x_point+b-0.09,2)},{length}\n' \
                   f'X\n'
     st.text(text_to_add)
     autocad_text += text_to_add
-    start_x_point += length+5
+    start_x_point += b+1
 
 
 def meander(p, r, p0, kf, ykf):
+    global start_x_point
+    global autocad_text
+    start_x_point = round(start_x_point,1)
     bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
     b_delta = (0.01 + 0.01 / kf) / ykf
-    b = max(b_delta, bp)
+    b = round(max(b_delta, bp), 1)
     l_average = b * kf
     t = b * 2
     n_optimal = int((l_average / t) ** 0.5 + 1)
-    n = st.slider('Укажите количество звеньев. Оптимальное количество: {}'.format(n_optimal),
-                  0, 10, n_optimal)
-    length_meandr = n * t
-    width_meandr = (l_average - b * n) / 3
+    # n = st.slider('Укажите количество звеньев. Оптимальное количество: {}'.format(n_optimal),
+    #               0, 10, n_optimal)
+    length_meandr = round(n_optimal * t, 1)
+    width_meandr = round((l_average - b * n_optimal) / 3,1)
+    st.text(f'Количество звеньев – {n_optimal}')
     st.text('Длина меандра - {}'.format(length_meandr))
     st.text('Ширина меандра - {}'.format(width_meandr))
+    text_to_add = f'COLOR ByLayer\n' \
+                  f'LINE {round(start_x_point + b, 1)},0' \
+                  f' {round(start_x_point + b,1)},{round(-2*b,1)}' \
+                  f' {start_x_point},{round(-2*b,1)}' \
+                  f' {start_x_point},{b}\n' \
+                  f'X\n' \
+                  f'COLOR RED\n' \
+                  f'LINE {start_x_point},{-b}' \
+                  f' {round(start_x_point+b,1)},{-b}\n' \
+                  f'X\n' \
+                  f'COLOR ByLayer\n'
+    for i in range(n_optimal):
+        if i % 2 == 0:
+            text_to_add += f'LINE {round(start_x_point + b,1)},{round(i * 2 * b,1)}' \
+                      f' {round(start_x_point + length_meandr,1)},{round(i * 2 * b,1)}' \
+                      f' {round(start_x_point + length_meandr,1)},{round(i * 2 * b + 3 * b,1)}\n' \
+                      f'X\n' \
+                      f'LINE {round(start_x_point + length_meandr - b,1)},{round(i * 2 * b + 2 * b,1)}' \
+                      f' {round(start_x_point + length_meandr - b,1)},{round(i * 2 * b + b,1)}' \
+                      f' {start_x_point},{round(i * 2 * b + b,1)}\n' \
+                      f'X\n'
+        else:
+            text_to_add += f'LINE {round(start_x_point + length_meandr - b,1)},{round(i * 2 * b,1)}' \
+                      f' {start_x_point},{round(i * 2 * b,1)}' \
+                      f' {start_x_point},{round(i * 2 * b + 3 * b,1)}\n' \
+                      f'X\n' \
+                      f'LINE {round(start_x_point + length_meandr,1)},{round(i * 2 * b + b,1)}' \
+                      f' {round(start_x_point + b,1)},{round(i * 2 * b + b,1)}' \
+                      f' {round(start_x_point + b,1)},{round(i * 2 * b + 2*b,1)}\n' \
+                      f'X\n'
+    if n_optimal % 2 == 1:
+        text_to_add += f'LINE {round(start_x_point + length_meandr - b, 1)},{round(n_optimal*2*b,1)}' \
+                       f' {round(start_x_point + length_meandr - b, 1)},{round(n_optimal*2*b + b,1)}' \
+                       f' {round(start_x_point + length_meandr, 1)},{round(n_optimal*2*b + b,1)}\n' \
+                       f'X\n' \
+                       f'COLOR RED\n' \
+                       f'LINE {round(start_x_point + length_meandr - b, 1)},{round(n_optimal*2*b,1)}' \
+                       f' {round(start_x_point + length_meandr, 1)},{round(n_optimal*2*b,1)}\n' \
+                       f'X\n' \
+                       f'COLOR ByLayer\n'
+    else:
+        text_to_add += f'LINE {start_x_point},{round(n_optimal*2*b+b,1)}' \
+                       f' {round(start_x_point+b,1)},{round(n_optimal*2*b+b,1)}' \
+                       f' {round(start_x_point+b,1)},{round(n_optimal*2*b,1)}\n' \
+                       f'X\n' \
+                       f'COLOR RED\n' \
+                       f'LINE {round(start_x_point+b,1)},{round(n_optimal*2*b,1)}' \
+                       f' {start_x_point},{round(n_optimal*2*b,1)}\n' \
+                       f'X\n' \
+                       f'COLOR ByLayer\n'
+    autocad_text+= text_to_add
+    st.text(text_to_add)
 
 
 def jumpers(r, p, p0, kf):
