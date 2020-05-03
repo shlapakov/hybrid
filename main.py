@@ -176,7 +176,13 @@ def rectangle(p, r, p0, kf, ykf, side):
     if side != 'b':
         b,length = length,b
     st.text(f'Ширина - {b}мм, Длина - {length}мм')
-    text_to_add = f'RECTANG {start_x_point},0 {b+start_x_point},{length}\n'
+    text_to_add = f'COLOR ByLayer\n' \
+                  f'RECTANG {start_x_point},0 {b+start_x_point},{length}\n' \
+                  f'COLOR RED\n' \
+                  f'LINE {round(start_x_point+0.18,2)},0 {round(start_x_point+0.18,2)},{length}\n' \
+                  f'X\n' \
+                  f'LINE {round(start_x_point+b-0.18,2)},0 {round(start_x_point+b-0.18,2)},{length}\n' \
+                  f'X\n'
     st.text(text_to_add)
     autocad_text += text_to_add
     start_x_point += length+5
@@ -186,8 +192,6 @@ def meander(p, r, p0, kf, ykf):
     bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
     b_delta = (0.01 + 0.01 / kf) / ykf
     b = max(b_delta, bp)
-    # a = b
-    print(bp)
     l_average = b * kf
     t = b * 2
     n_optimal = int((l_average / t) ** 0.5 + 1)
