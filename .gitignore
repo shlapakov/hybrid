@@ -1,4 +1,6 @@
 /.idea
 /venv
+/new_site
 freeze
+
 test.py

@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import random
 
 TKS_TEXT = 'Укажите ТКС'
 ERROR_TEXT = 'Укажите погрешность старения'
@@ -8,6 +9,7 @@ MASK = 0.3
 LITHOGRAPHY = 0.05
 method = ...
 start_x_point = 0
+
 
 
 def data_for_table(data_to_change):
@@ -19,21 +21,23 @@ def data_for_table(data_to_change):
 
 
 def spawn_resistors_table():
-    st.write(pd.DataFrame({
+    table = pd.DataFrame({
         'Номер резистора': [i for i in range(1, len(data[0]) + 1)],
         'Сопротивление': data_for_table(data[0]),
         'Мощность': data_for_table(data[1]),
         'Погрешность': data_for_table(data[2]),
-        'Макc. температура': [max_temperature] * len(data[0])
-    }))
+        'Макc. температура': [max_temperature] * len(data[0])})
+    st.table(table)
+    return table
 
 
 def spawn_field(number, name):
-    x = st.number_input('{} резистора {}'.format(name, number), 1)
+    x = st.sidebar.number_input('{} резистора {}'.format(name, number), 1)
     return x
 
 
 def spawn_fields():
+    st.sidebar.subheader('Параметры резисторов')
     resistances = {}
     powers = {}
     user_errors = {}
@@ -51,7 +55,8 @@ def spawn_ro_opt():
     global ro_square
     if 0 not in data_for_table(data[0]):
         ro_opt = round((sum(data_for_table(data[0])) / sum([1 / i for i in data_for_table(data[0])])) ** 0.5) // 10 * 10
-        ro_square = st.number_input('Введите ро квадрат (рекомендуется {})'.format(ro_opt), step=10.0)
+        st.sidebar.subheader(f'Введите ро квадрат (рекомендуется {ro_opt})')
+        ro_square = st.sidebar.number_input('', step=10.0)
     return ro_square
 
 
@@ -76,7 +81,8 @@ def spawn_material_choice():
         names_of_fit = []
         for i in fit_materials:
             names_of_fit.append(i['name'])
-        main_material = st.selectbox('Выберите подходящий вам материал', names_of_fit)
+        st.sidebar.subheader('Выберите подходящий вам материал')
+        main_material = st.sidebar.selectbox('Допустимые материалы:',names_of_fit)
         for i in fit_materials:
             if i['name'] == main_material:
                 return i
@@ -86,12 +92,19 @@ def check_for_double(min_value, max_value):
     if min_value == max_value:
         return str(min_value)
     else:
-        return '[({})-({})]'.format(min_value, max_value)
+        return f'({min_value})-({max_value})'
+
+def spawn_materials_table():
+    df = pd.read_json('materials.json')
+    st.dataframe(df)
+
 
 
 def spawn_material_info():
+
     if ro_square >= 3:
-        st.text('Сопротивление квадрата разистивной пленки (Ом/кв) - {}'.
+        st.header('Параметры выбранного материала')
+        st.text('Сопротивление квадрата резистивной пленки (Ом/кв) - {}'.
                 format(check_for_double(material['min_res'], material['max_res'])))
         st.text('Удельная допустимая мощность рассеивания (Вт/См2)- {}'.
                 format(material['power']))
@@ -104,7 +117,8 @@ def spawn_material_info():
 def spawn_some_choice(min_value, max_value, text):
     if ro_square >= 3:
         if min_value != max_value:
-            value = st.slider(text,
+            st.sidebar.subheader(text)
+            value = st.sidebar.slider('',
                               float(min_value),
                               float(max_value),
                               float(min_value),
@@ -177,7 +191,7 @@ def rectangle(p, r, p0, kf, ykf, side):
         b,length = length,b
     st.text(f'Ширина - {b}мм, Длина - {length}мм')
     text_to_add = f'COLOR ByLayer\n' \
-                  f'RECTANG {start_x_point},0 {b+start_x_point},{length}\n' \
+                  f'RECTANG {start_x_point},0 {round(b+start_x_point,1)},{length}\n' \
                   f'COLOR RED\n' \
                   f'LINE {round(start_x_point+0.09,2)},0 {round(start_x_point+0.09,2)},{length}\n' \
                   f'X\n' \
@@ -267,7 +281,7 @@ def jumpers(r, p, p0, kf):
         side_b = (-length * ro_square + (length ** 2 * ro_square ** 2 + r * ro_square * length * width * 2) ** 0.5) / (
                     r * 2)
         number_of_jumpers = length / (width * 2)
-        st.text('Ширина резистиваной пленки - {}мм'.format(side_b))
+        st.text('Ширина резистивной пленки - {}мм'.format(side_b))
         st.text('Число резистивных полосок - {}'.format(number_of_jumpers // 1))
     elif variant == 'Расчет прямоугольника':
         bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
@@ -275,9 +289,9 @@ def jumpers(r, p, p0, kf):
             length = bp * (kf * 2) ** 0.5
         else:
             length = bp * (1 + (1 + kf * 2) ** 0.5)
-        width = length
-        number_of_jumpers = length / (2 * width)
-        st.text('Ширина полоски - {}мм'.format(width))
+        # width = length
+        number_of_jumpers = length / (2 * length)
+        st.text('Ширина полоски - {}мм'.format(length))
         st.text('Ширина и длина одинаковы и равны {}мм'.format(length))
         st.text('Число резистивных полосок - {}'.format(number_of_jumpers))
 
@@ -309,20 +323,26 @@ def sizes():
                         kf=form_coefs[i])
 
 autocad_text = ''
-st.title('Расчет резисторов')
-number_of_resistors = st.number_input('Количество резисторов', 1)
-max_temperature = st.number_input('Максимальная температура ', 40)
+st.sidebar.title('Расчет резисторов')
+number_of_resistors = st.sidebar.number_input('Количество резисторов', 1)
+max_temperature = st.sidebar.number_input('Максимальная температура ', 40)
 data = spawn_fields()
+st.title('Таблица резисторов')
+
 spawn_resistors_table()
 ro_square = spawn_ro_opt()
-st.image('table.jpg', use_column_width=True)
+# st.image('table.jpg', use_column_width=True)
+st.title('Таблица материалов')
+spawn_materials_table()
+# st.json(get_materials())
 fit_materials = get_materials_with_r()
 material = spawn_material_choice()
 spawn_material_info()
 if ro_square >= 3:
     tks = spawn_some_choice(material['min_tks'], material['max_tks'], TKS_TEXT)
     old_error = spawn_some_choice(material['min_error'], material['max_error'], ERROR_TEXT)
-contact_error = st.selectbox('Укажите погрешность переходных сопротивлений контактов', [1, 2])
+st.sidebar.subheader('Укажите поггрешность переходных сопротивлений контактов')
+contact_error = st.sidebar.selectbox('', [1, 2])
 errors = calc_errors()
 form_coefs = calc_forms_coefs()
 forms_fits = spawn_coefficients_and_errors_info()
@@ -333,3 +353,25 @@ elif l_tech == 'Фотолитография':
     method = LITHOGRAPHY
 sizes()
 st.text(autocad_text)
+
+
+import base64
+def get_table_download_link(df):
+    """Generates a link allowing the data in a given panda dataframe to be downloaded
+    in:  dataframe
+    out: href string
+    """
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
+    href = f'<a href="data:file/csv;base64,{b64}">Download csv file</a>'
+    return href
+
+# def get_scr_download_link(autocad_text):
+#     file_number = random.randint(1,1000)
+#     file_name = f'autocad{file_number}.scr'
+#
+#     with open(file_name, 'a+') as file:
+#         file.write(autocad_text)
+#     return file_name
+# auto_file = get_scr_download_link(autocad_text)
+# st.markdown(f'<a href="file:/{auto_file}">Download scr file</a>', unsafe_allow_html=True)
