@@ -22,11 +22,11 @@ def data_for_table(data_to_change):
 
 def spawn_resistors_table():
     table = pd.DataFrame({
-        'Номер резистора': [i for i in range(1, len(data[0]) + 1)],
         'Сопротивление': data_for_table(data[0]),
         'Мощность': data_for_table(data[1]),
         'Погрешность': data_for_table(data[2]),
-        'Макc. температура': [max_temperature] * len(data[0])})
+        'Макc. температура': [max_temperature] * len(data[0])},
+        index=[i for i in range(1, len(data[0]) + 1)])
     st.table(table)
     return table
 
@@ -81,8 +81,8 @@ def spawn_material_choice():
         names_of_fit = []
         for i in fit_materials:
             names_of_fit.append(i['name'])
-        st.sidebar.subheader('Выберите подходящий вам материал')
-        main_material = st.sidebar.selectbox('Допустимые материалы:',names_of_fit)
+        st.subheader('Выберите подходящий вам материал')
+        main_material = st.selectbox('Допустимые материалы:',names_of_fit)
         for i in fit_materials:
             if i['name'] == main_material:
                 return i
@@ -96,7 +96,11 @@ def check_for_double(min_value, max_value):
 
 def spawn_materials_table():
     df = pd.read_json('materials.json')
-    st.dataframe(df)
+    df_new = df.rename(index={'name':'Название', 'max_tks':'Макс. ТКС',
+                              'min_tks':'Мин. ТКС', 'min_res':'Мин. R',
+                              'power':'Удельная мощность', 'max_res':'Макс. R',
+                              'min_error':'Мин. погрешность', 'max_error':'Макс. погрешность'})
+    st.dataframe(df_new)
 
 
 
@@ -323,6 +327,7 @@ def sizes():
                         kf=form_coefs[i])
 
 autocad_text = ''
+st.success('Я ЛЮБЛЮ СВОЕ СОЛНЫШКО ТУСЮ')
 st.sidebar.title('Расчет резисторов')
 number_of_resistors = st.sidebar.number_input('Количество резисторов', 1)
 max_temperature = st.sidebar.number_input('Максимальная температура ', 40)
@@ -346,13 +351,18 @@ contact_error = st.sidebar.selectbox('', [1, 2])
 errors = calc_errors()
 form_coefs = calc_forms_coefs()
 forms_fits = spawn_coefficients_and_errors_info()
-l_tech = st.selectbox('Выберите метод изготовления микросхемы ', ['Масочный', 'Фотолитография'])
+st.sidebar.subheader('Выберите метод изготовления микросхемы')
+l_tech = st.sidebar.selectbox('', ['Масочный', 'Фотолитография'])
 if l_tech == 'Масочный':
     method = MASK
 elif l_tech == 'Фотолитография':
     method = LITHOGRAPHY
+if material:
+    st.subheader('Расчет размеров элементов')
 sizes()
-st.text(autocad_text)
+if autocad_text:
+    st.subheader('Скрипт для Автокада')
+st.warning(autocad_text)
 
 
 import base64

@@ -13,8 +13,8 @@
   "min_res": 200,
   "max_res": 500,
   "power": 1,
-  "min_tks": 0.6,
-  "max_tks": 0.6,
+  "min_tks": 0.60,
+  "max_tks": 0.60,
   "min_error": 0,
   "max_error": 0
 },
@@ -233,8 +233,8 @@
   "min_res": 50,
   "max_res": 500,
   "power": 2,
-  "min_tks": 0.3,
-  "max_tks": 0.3,
+  "min_tks": 0.30,
+  "max_tks": 0.30,
   "min_error": 1,
   "max_error": 1
 }}
