@@ -327,7 +327,7 @@ def sizes():
                         kf=form_coefs[i])
 
 autocad_text = ''
-st.success('Я ЛЮБЛЮ СВОЕ СОЛНЫШКО ТУСЮ')
+st.markdown(f'<h2><a href="https://telegra.ph/Prakticheskaya-rabota-1-Raschet-plenochnyh-rezistorov-05-05" target="_blank">Методичка к ПР1</a></h2>', unsafe_allow_html=True)
 st.sidebar.title('Расчет резисторов')
 number_of_resistors = st.sidebar.number_input('Количество резисторов', 1)
 max_temperature = st.sidebar.number_input('Максимальная температура ', 40)
@@ -362,7 +362,7 @@ if material:
 sizes()
 if autocad_text:
     st.subheader('Скрипт для Автокада')
-st.warning(autocad_text)
+st.text(autocad_text)
 
 
 import base64
