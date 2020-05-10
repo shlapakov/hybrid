@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import time
 
 import base64
 
@@ -372,8 +373,8 @@ sizes()
 st.sidebar.title('Расчет конденсаторов')
 number_of_capacitors = st.sidebar.number_input('Количество конденсаторов', 1)
 
-
-
-import base64
-b64 = base64.b64encode(autocad_text.encode()).decode()
-st.markdown(f'<h2><a href="data:file/scr;base64,{b64}" download="script.scr"> Скачать скрипт</a> (Все нормально, все разрешаем:))</h2>', unsafe_allow_html=True)
+if autocad_text:
+    b64 = base64.b64encode(autocad_text.encode()).decode()
+    st.markdown(f'<h2><a href="data:file/scr;base64,{b64}" download="script.scr"> Скачать скрипт</a> (Все нормально, все разрешаем:))</h2>', unsafe_allow_html=True)
+else:
+    st.warning('Ожидание расчетов...')
