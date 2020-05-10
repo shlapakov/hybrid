@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import json
-import random
+
+import base64
 
 TKS_TEXT = 'Укажите ТКС'
 ERROR_TEXT = 'Укажите погрешность старения'
@@ -137,7 +138,7 @@ def calc_errors():
         full_errors = []
         for resistor in data_for_table(data[2]):
             error = resistor - 5 - old_error - (tks * 0.01 * (max_temperature - 20)) - contact_error
-            full_errors.append(error)
+            full_errors.append(round(error,2))
         return full_errors
 
 
@@ -161,7 +162,7 @@ def spawn_coefficients_and_errors_info():
                 form = 'Прямоугольный (l<b)'
             elif 1 <= i <= 10:
                 form = 'Прямоугольный (l>b)'
-            elif 10 < i <= 20:
+            elif 10 < i <= 50:
                 form = 'Меандр'
             else:
                 form = 'Проводящие перемычки'
@@ -174,11 +175,11 @@ def spawn_coefficients_and_errors_info():
                 fit = 'Да'
             fits.append(fit)
         st.write(pd.DataFrame(
-            {'Номер': [i for i in range(1, len(data[0]) + 1)],
-             'Кф': form_coefs,
-             'Форма': forms,
+            {'Кф': form_coefs,
+             'Рекомендуемая форма': forms,
              'Погрешность': errors,
-             'Пригонка': fits}
+             'Пригонка': fits},
+            index=[i for i in range(1, len(data[0]) + 1)]
         ))
         return [forms, fits]
 
@@ -201,7 +202,7 @@ def rectangle(p, r, p0, kf, ykf, side):
                   f'X\n' \
                   f'LINE {round(start_x_point+b-0.09,2)},0 {round(start_x_point+b-0.09,2)},{length}\n' \
                   f'X\n'
-    st.text(text_to_add)
+    # st.text(text_to_add)
     autocad_text += text_to_add
     start_x_point += b+1
 
@@ -274,30 +275,32 @@ def meander(p, r, p0, kf, ykf):
                        f'X\n' \
                        f'COLOR ByLayer\n'
     autocad_text+= text_to_add
-    st.text(text_to_add)
+    # st.text(text_to_add)
 
 
-def jumpers(r, p, p0, kf):
-    variant = st.selectbox('Укажите вариант изготовления', ['Вписанный контур', 'Расчет прямоугольника'])
-    if variant == 'Вписанный контур':
-        length = st.number_input('Укажите длину контура', 1)
-        width = st.number_input('Укажите ширину контура', 1)
-        side_b = (-length * ro_square + (length ** 2 * ro_square ** 2 + r * ro_square * length * width * 2) ** 0.5) / (
-                    r * 2)
-        number_of_jumpers = length / (width * 2)
-        st.text('Ширина резистивной пленки - {}мм'.format(side_b))
-        st.text('Число резистивных полосок - {}'.format(number_of_jumpers // 1))
-    elif variant == 'Расчет прямоугольника':
-        bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
-        if kf > 20:
-            length = bp * (kf * 2) ** 0.5
-        else:
-            length = bp * (1 + (1 + kf * 2) ** 0.5)
-        # width = length
-        number_of_jumpers = length / (2 * length)
-        st.text('Ширина полоски - {}мм'.format(length))
-        st.text('Ширина и длина одинаковы и равны {}мм'.format(length))
-        st.text('Число резистивных полосок - {}'.format(number_of_jumpers))
+# def jumpers(r, p, p0, kf):
+#     if kf > 10:
+#         variant = st.selectbox('Укажите вариант изготовления', ['Вписанный контур', 'Расчет прямоугольника'])
+#         if variant == 'Вписанный контур':
+#             length = st.number_input('Укажите длину контура', 0.1)
+#             width = st.number_input('Укажите ширину контура', 0.1)
+#             side_b = (-length * ro_square + (length ** 2 * ro_square ** 2 + r * ro_square * length * width * 2) ** 0.5) / (
+#                         r * 2)
+#             print(side_b)
+#             number_of_jumpers = length / (width * 2)
+#             st.text('Ширина резистивной пленки - {}мм'.format(side_b))
+#             st.text('Число резистивных полосок - {}'.format(number_of_jumpers // 1))
+#         elif variant == 'Расчет прямоугольника':
+#             bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
+#             length = bp * (1 + (1 + kf * 2) ** 0.5)
+#             if kf > 20:
+#                 length = bp * (kf * 2) ** 0.5
+#             number_of_jumpers = length / (2 * length)
+#             st.text('Ширина полоски - {}мм'.format(length))
+#             st.text('Ширина и длина одинаковы и равны {}мм'.format(length))
+#             st.text('Число резистивных полосок - {}'.format(number_of_jumpers))
+#     else:
+#         st.text('Такой резистор реализовать невозможно')
 
 
 def sizes():
@@ -306,7 +309,7 @@ def sizes():
             res_form = st.selectbox('Выберите форму резистора {} (рекомендуется {})'.
                                     format(i + 1, forms_fits[0][i]),
                                     ['Прямоугольный(l<b)', ' Прямоугольный(1>b)',
-                                     'Меандр', 'Проводящие перемычки'])
+                                     'Меандр']) #'Проводящие перемычки'
             if 'Прямоугольный' in res_form:
                 rectangle(p=data_for_table(data[1])[i],
                           r=data_for_table(data[0])[i],
@@ -320,14 +323,17 @@ def sizes():
                         p0=material['power'],
                         kf=form_coefs[i],
                         ykf=errors[i])
-            if res_form == 'Проводящие перемычки':
-                jumpers(r=data_for_table(data[0])[i],
-                        p=data_for_table(data[1])[i],
-                        p0=material['power'],
-                        kf=form_coefs[i])
+            # if res_form == 'Проводящие перемычки':
+            #     jumpers(r=data_for_table(data[0])[i],
+            #             p=data_for_table(data[1])[i],
+            #             p0=material['power'],
+            #             kf=form_coefs[i])
 
 autocad_text = ''
-st.markdown(f'<h2><a href="https://telegra.ph/Prakticheskaya-rabota-1-Raschet-plenochnyh-rezistorov-05-05" target="_blank">Методичка к ПР1</a></h2>', unsafe_allow_html=True)
+st.markdown(f'<h2>'
+            f'<a href="https://teletype.in/@mrc/GIS"'
+            f'target="_blank">'
+            f'База Знаний</a></h2>', unsafe_allow_html=True)
 st.sidebar.title('Расчет резисторов')
 number_of_resistors = st.sidebar.number_input('Количество резисторов', 1)
 max_temperature = st.sidebar.number_input('Максимальная температура ', 40)
@@ -346,7 +352,7 @@ spawn_material_info()
 if ro_square >= 3:
     tks = spawn_some_choice(material['min_tks'], material['max_tks'], TKS_TEXT)
     old_error = spawn_some_choice(material['min_error'], material['max_error'], ERROR_TEXT)
-st.sidebar.subheader('Укажите поггрешность переходных сопротивлений контактов')
+st.sidebar.subheader('Укажите погрешность переходных сопротивлений контактов')
 contact_error = st.sidebar.selectbox('', [1, 2])
 errors = calc_errors()
 form_coefs = calc_forms_coefs()
@@ -360,28 +366,14 @@ elif l_tech == 'Фотолитография':
 if material:
     st.subheader('Расчет размеров элементов')
 sizes()
-if autocad_text:
-    st.subheader('Скрипт для Автокада')
-st.text(autocad_text)
+# if autocad_text:
+#     st.subheader('Скрипт для Автокада')
+#     st.text(autocad_text)
+st.sidebar.title('Расчет конденсаторов')
+number_of_capacitors = st.sidebar.number_input('Количество конденсаторов', 1)
+
 
 
 import base64
-def get_table_download_link(df):
-    """Generates a link allowing the data in a given panda dataframe to be downloaded
-    in:  dataframe
-    out: href string
-    """
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
-    href = f'<a href="data:file/csv;base64,{b64}">Download csv file</a>'
-    return href
-
-# def get_scr_download_link(autocad_text):
-#     file_number = random.randint(1,1000)
-#     file_name = f'autocad{file_number}.scr'
-#
-#     with open(file_name, 'a+') as file:
-#         file.write(autocad_text)
-#     return file_name
-# auto_file = get_scr_download_link(autocad_text)
-# st.markdown(f'<a href="file:/{auto_file}">Download scr file</a>', unsafe_allow_html=True)
+b64 = base64.b64encode(autocad_text.encode()).decode()
+st.markdown(f'<h2><a href="data:file/scr;base64,{b64}" download="script.scr"> Скачать скрипт</a> (Все нормально, все разрешаем:))</h2>', unsafe_allow_html=True)
