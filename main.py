@@ -12,6 +12,14 @@ LITHOGRAPHY = 0.05
 method = ...
 start_x_point = 0
 
+hide_menu_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        </style>
+        """
+
+st.markdown(hide_menu_style, unsafe_allow_html=True)
 
 
 def data_for_table(data_to_change):
