@@ -108,8 +108,11 @@ def spawn_materials_table():
     df = pd.read_json('materials.json')
     df_new = df.rename(index={'name':'Название', 'max_tks':'Макс. ТКС',
                               'min_tks':'Мин. ТКС', 'min_res':'Мин. R',
-                              'power':'Удельная мощность', 'max_res':'Макс. R',
-                              'min_error':'Мин. погрешность', 'max_error':'Макс. погрешность'})
+                              'power':'Мощн.', 'max_res':'Макс. R',
+                              'min_error':'Мин. погр.', 'max_error':'Макс. погр.'})
+    df_new = df_new.transpose()
+    df_new = df_new.rename(index = {x+1:name for x, name in enumerate(list(df_new['Название']))})
+    del df_new['Название']
     st.dataframe(df_new)
 
 
