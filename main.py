@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
-import time
+
 
 import base64
 
@@ -45,6 +45,10 @@ def spawn_field(number, name):
     x = st.sidebar.number_input('{} резистора {}'.format(name, number), 1)
     return x
 
+def spawn_cond_field(number, name):
+    x = st.sidebar.number_input('{} конденсатора {}'.format(name, number), 1)
+    return x
+
 
 def spawn_fields():
     st.sidebar.subheader('Параметры резисторов')
@@ -73,6 +77,19 @@ def spawn_ro_opt():
 def get_materials():
     with open('materials.json', 'r', encoding='utf-8') as file:
         return json.loads(file.read())
+
+def get_diel_materials():
+    with open('diel_materials.json', 'r', encoding='utf-8') as file:
+        return json.loads(file.read())
+
+def get_materials_for_cond():
+    materials = get_diel_materials()
+    numbers_of_materials = materials.keys()
+    suitable_materials = []
+    for number in numbers_of_materials:
+        next_material = materials[number]
+        suitable_materials.append(next_material)
+    return suitable_materials
 
 
 def get_materials_with_r():
@@ -162,6 +179,14 @@ def calc_forms_coefs():
             coefs.append(coefficient)
         return coefs
 
+def calc_squares():
+    if c0:
+        squares = []
+        for cond in capacities:
+            squares.append(round(cond / c0,2))
+        return squares
+
+
 
 def spawn_coefficients_and_errors_info():
     if ro_square >= 3:
@@ -194,6 +219,22 @@ def spawn_coefficients_and_errors_info():
             index=[i for i in range(1, len(data[0]) + 1)]
         ))
         return [forms, fits]
+
+def spawn_cond_info():
+    st.title('Активные площади')
+    forms = []
+    for i in squares:
+        if i >= 5:
+            form = 'Перекрытие'
+        else:
+            form = 'Пересечение'
+        forms.append(form)
+    forms_table = pd.DataFrame(
+        {'Площадь': squares,
+         'Форма': forms},
+        index=[i for i in range(1, len(forms)+1)])
+    st.table(forms_table)
+    return forms_table
 
 
 def rectangle(p, r, p0, kf, ykf, side):
@@ -341,48 +382,176 @@ def sizes():
             #             p0=material['power'],
             #             kf=form_coefs[i])
 
+def get_method():
+    global method
+    st.sidebar.subheader('Выберите метод изготовления микросхемы')
+    l_tech = st.sidebar.selectbox('', ['Масочный', 'Фотолитография'])
+    if l_tech == 'Масочный':
+        method = MASK
+    elif l_tech == 'Фотолитография':
+        method = LITHOGRAPHY
+
+
+def spawn_cond_fields():
+    st.sidebar.subheader('Параметры конденсаторов')
+    capacities = {}
+    cond_errors = {}
+    powers = {}
+    for i in range(number_of_capacitors):
+        capacity = spawn_cond_field(i + 1, 'Емкость')
+        capacities[i + 1] = capacity
+        power = spawn_cond_field(i+1, 'Мощность')
+        powers[i+1] = power
+        cond_error = spawn_cond_field(i + 1, 'Погрешность')
+        cond_errors[i + 1] = cond_error
+    return [capacities, cond_errors, powers]
+
+
+
+def spawn_cond_table():
+    table = pd.DataFrame({
+        'Емкость': data_for_table(cond_data[0]),
+        'Погрешность': data_for_table(cond_data[1]),
+        'Мощность': data_for_table(cond_data[2]),
+        'Макc. температура': [max_temperature] * len(cond_data[0])},
+        index=[i for i in range(1, len(cond_data[0]) + 1)])
+    st.table(table)
+    return table
+
+
+def spawn_cond_materials_table():
+    df = pd.read_json('diel_materials.json')
+    df_new = df.rename(index={'name':'Название', 'mat_obk':'Материал обкладки',
+                              'min_power':'Мин. мощность', 'max_power':'Макс. мощность',
+                              'min_c':'Мин. уд. емк.', 'max_c':'Макс. уд. емк.',
+                              'diel_pron':'Диэл. прониц.', 'e_pr':'Епр'})
+    df_new = df_new.transpose()
+    df_new = df_new.rename(index = {x+1:name for x, name in enumerate(list(df_new['Название']))})
+    del df_new['Название']
+    del df_new['Материал обкладки']
+    st.dataframe(df_new)
+    return df_new
+
+def top_more(s):
+    global start_x_point
+    global autocad_text
+    start_x_point = round(start_x_point,1)
+    a1 = round(s ** 0.5, 1)
+    st.text(f'Сторона верхней обкладки равна {a1}мм')
+    a2 = round(a1 + 0.1, 1)
+    st.text(f'Сторона нижней обкладки равна {a2}мм')
+    a3 = round(a2 + 0.1, 1)
+    st.text(f'Сторона диэлектрика равна {a3}мм')
+
+def intersection(s):
+    global start_x_point
+    global autocad_text
+    start_x_point = round(start_x_point,1)
+    s *= 1.15
+    s = round(s,2)
+    st.text(f'Площадь перекрытия обкладок равна {s}мм2')
+    a1 = round(s ** 0.5, 1)
+    st.text(f'Размеры обкладок – {a1}мм')
+    a2 = round(a1 + 0.1, 1)
+    st.text(f'Размеры диэлектрика – {a2}мм')
+
+
+def cond_sizes():
+    for i in range(len(squares)):
+        cond_form = st.selectbox(f'Выбирайте форму конденсатора {i+1} (рекомендуется брать из таблицы выше)',
+                                ['Пересечение', 'Перекрытие'], key=i)
+        if cond_form == 'Перекрытие':
+            top_more(s=squares[i])
+        elif cond_form == 'Пересечение':
+            intersection(s=squares[i])
+
 autocad_text = ''
 st.markdown(f'<h2>'
             f'<a href="https://teletype.in/@mrc/GIS"'
             f'target="_blank">'
             f'База Знаний</a></h2>', unsafe_allow_html=True)
-st.sidebar.title('Расчет резисторов')
-number_of_resistors = st.sidebar.number_input('Количество резисторов', 1)
-max_temperature = st.sidebar.number_input('Максимальная температура ', 40)
-data = spawn_fields()
-st.title('Таблица резисторов')
 
-spawn_resistors_table()
-ro_square = spawn_ro_opt()
-# st.image('table.jpg', use_column_width=True)
-st.title('Таблица материалов')
-spawn_materials_table()
-# st.json(get_materials())
-fit_materials = get_materials_with_r()
-material = spawn_material_choice()
-spawn_material_info()
-if ro_square >= 3:
-    tks = spawn_some_choice(material['min_tks'], material['max_tks'], TKS_TEXT)
-    old_error = spawn_some_choice(material['min_error'], material['max_error'], ERROR_TEXT)
-st.sidebar.subheader('Укажите погрешность переходных сопротивлений контактов')
-contact_error = st.sidebar.selectbox('', [1, 2])
-errors = calc_errors()
-form_coefs = calc_forms_coefs()
-forms_fits = spawn_coefficients_and_errors_info()
-st.sidebar.subheader('Выберите метод изготовления микросхемы')
-l_tech = st.sidebar.selectbox('', ['Масочный', 'Фотолитография'])
-if l_tech == 'Масочный':
-    method = MASK
-elif l_tech == 'Фотолитография':
-    method = LITHOGRAPHY
-if material:
-    st.subheader('Расчет размеров элементов')
-sizes()
-# if autocad_text:
-#     st.subheader('Скрипт для Автокада')
-#     st.text(autocad_text)
-st.sidebar.title('Расчет конденсаторов')
-number_of_capacitors = st.sidebar.number_input('Количество конденсаторов', 1)
+get_method()
+max_temperature = st.sidebar.number_input('Максимальная температура ', 40)
+el = st.sidebar.radio('Выберите элементы для расчета', ('Резисторы', 'Конденсаторы'))
+
+
+if el == 'Резисторы':
+    st.sidebar.title('Расчет резисторов')
+    number_of_resistors = st.sidebar.number_input('Количество резисторов', 1)
+    data = spawn_fields()
+    st.title('Таблица резисторов')
+
+    spawn_resistors_table()
+    ro_square = spawn_ro_opt()
+    st.title('Таблица материалов')
+    spawn_materials_table()
+    fit_materials = get_materials_with_r()
+    material = spawn_material_choice()
+    spawn_material_info()
+    if ro_square >= 3:
+        tks = spawn_some_choice(material['min_tks'], material['max_tks'], TKS_TEXT)
+        old_error = spawn_some_choice(material['min_error'], material['max_error'], ERROR_TEXT)
+    st.sidebar.subheader('Укажите погрешность переходных сопротивлений контактов')
+    contact_error = st.sidebar.selectbox('', [1, 2])
+    errors = calc_errors()
+    form_coefs = calc_forms_coefs()
+    forms_fits = spawn_coefficients_and_errors_info()
+    if material:
+        st.subheader('Расчет размеров элементов')
+    sizes()
+
+
+
+elif el == 'Конденсаторы':
+    st.sidebar.title('Расчет конденсаторов')
+    number_of_capacitors = st.sidebar.number_input('Количество конденсаторов', 1)
+    cond_data = spawn_cond_fields()
+    st.title('Таблица конденсаторов')
+    spawn_cond_table()
+    st.title('Таблица материалов')
+    materials = spawn_cond_materials_table()
+    error_ys = st.sidebar.selectbox('Укажите погрешность воспроизведения удельной емкость', [3,4,5])
+    error_st = st.sidebar.selectbox('Укажите погрешность старения', [2,3])
+    fit_materials = get_materials_for_cond()
+    material = spawn_material_choice()
+    kz = st.sidebar.number_input('Укажите коэффициент запаса',  min_value=2, max_value=4)
+
+    min_power = materials.loc[material['name']][2]
+    max_power = materials.loc[material['name']][3]
+    e_pr = materials.loc[material['name']][0]
+    diel_pron = materials.loc[material['name']][6]
+    tke = materials.loc[material['name']][1]
+
+
+    for i in [x[1] for x in cond_data[2].items()]:
+        if i < min_power or i > max_power:
+            st.warning(f'Материал не подходит по параметрам конденсатора с мощностью {i}')
+    work_power = st.slider('Укажите рабочее напряжение', min_value=min_power, max_value=max_power, value=min_power)
+    d = work_power * kz / e_pr / 100
+    d = round(d, 2)
+    st.write(f'Толщина диэлектрика – {d} мкм')
+
+
+    ysdop = cond_data[1][1] - error_ys - tke * (max_temperature - 20) / 100 - error_st
+    ysdop = round(ysdop, 2)
+
+
+    c01 = 0.0885 * diel_pron / d * 100
+    c01 = round(c01)
+    st.write(f'C0\' = {c01}')
+    capacities = [x[1] for x in cond_data[0].items()]
+    c02 = min(capacities) * (ysdop / 0.01) ** 2 / 40000
+    c02 = round(c02)
+    st.write(f'C0\'\' = {c02}')
+    c03 = min(capacities) / 2
+    st.write(f'C0\'\'\' = {c03}')
+    c0 = min([c01, c02, c03])
+    st.write(f'Таким образом Со = {c0}')
+
+    squares = calc_squares()
+    cond_table = spawn_cond_info()
+    cond_sizes()
 
 if autocad_text:
     b64 = base64.b64encode(autocad_text.encode()).decode()
