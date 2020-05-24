@@ -237,7 +237,7 @@ def spawn_cond_info():
     return forms_table
 
 
-def rectangle(p, r, p0, kf, ykf, side):
+def rectangle(p, r, p0, kf, ykf, side, number):
     global start_x_point
     global autocad_text
     bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
@@ -254,13 +254,16 @@ def rectangle(p, r, p0, kf, ykf, side):
                   f'LINE {round(start_x_point+0.09,2)},0 {round(start_x_point+0.09,2)},{length}\n' \
                   f'X\n' \
                   f'LINE {round(start_x_point+b-0.09,2)},0 {round(start_x_point+b-0.09,2)},{length}\n' \
-                  f'X\n'
-    # st.text(text_to_add)
+                  f'X\n' \
+                  f'-hatch p dots 0.05 0 {start_x_point+0.1},0.1\n ' \
+                  f'TEXT {round(start_x_point + b / 2, 1)},{round(start_x_point + b / 2, 1)} 0.25 0 R{number}\n'
+
+    st.text(text_to_add)
     autocad_text += text_to_add
     start_x_point += b+1
 
 
-def meander(p, r, p0, kf, ykf):
+def meander(p, r, p0, kf, ykf, number):
     global start_x_point
     global autocad_text
     start_x_point = round(start_x_point,1)
@@ -327,8 +330,11 @@ def meander(p, r, p0, kf, ykf):
                        f' {start_x_point},{round(n_optimal*2*b,1)}\n' \
                        f'X\n' \
                        f'COLOR ByLayer\n'
+    text_to_add += f'-hatch p dots 0.05 0 {round(start_x_point+0.1,1)},0.1\n ' \
+                   f'TEXT {round(start_x_point+b/2,1)},{round(start_x_point+b/2,1)} 0.25 0 R{number}\n'
     autocad_text+= text_to_add
-    # st.text(text_to_add)
+    st.text(text_to_add)
+    start_x_point += b+1
 
 
 # def jumpers(r, p, p0, kf):
@@ -369,13 +375,15 @@ def sizes():
                           p0=material['power'],
                           kf=form_coefs[i],
                           ykf=errors[i],
-                          side='b' if '(l<b)' in res_form else 'l')
+                          side='b' if '(l<b)' in res_form else 'l',
+                          number=i)
             if res_form == 'Меандр':
                 meander(p=data_for_table(data[1])[i],
                         r=data_for_table(data[0])[i],
                         p0=material['power'],
                         kf=form_coefs[i],
-                        ykf=errors[i])
+                        ykf=errors[i],
+                        number=i)
             # if res_form == 'Проводящие перемычки':
             #     jumpers(r=data_for_table(data[0])[i],
             #             p=data_for_table(data[1])[i],
@@ -398,6 +406,7 @@ def spawn_cond_fields():
     cond_errors = {}
     powers = {}
     for i in range(number_of_capacitors):
+        st.sidebar.subheader(f'Конденсатор {i+1}')
         capacity = spawn_cond_field(i + 1, 'Емкость')
         capacities[i + 1] = capacity
         power = spawn_cond_field(i+1, 'Мощность')
@@ -432,7 +441,7 @@ def spawn_cond_materials_table():
     st.dataframe(df_new)
     return df_new
 
-def top_more(s):
+def top_more(s, number):
     global start_x_point
     global autocad_text
     start_x_point = round(start_x_point,1)
@@ -442,8 +451,21 @@ def top_more(s):
     st.text(f'Сторона нижней обкладки равна {a2}мм')
     a3 = round(a2 + 0.1, 1)
     st.text(f'Сторона диэлектрика равна {a3}мм')
+    text_to_add = f'COLOR ByLayer\n' \
+                  f'-LINETYPE s ACAD_ISO04W100\n\n' \
+                  f'RECTANG {start_x_point},0 {round(start_x_point+a3,1)},{a3}\n' \
+                  f'-LINETYPE s ByLayer\n\n' \
+                  f'RECTANG {start_x_point+0.05},0.05 {start_x_point+0.05+a2},{0.05+a2}\n' \
+                  f'RECTANG {start_x_point+0.1},0.1 {start_x_point+0.1+a1},{0.1+a1}\n' \
+                  f'-hatch p ANSI31 0.05 0 {start_x_point+0.15},0.15 \n\n ' \
+                  f'-hatch p ANSI31 0.05 90 {start_x_point+0.07},0.07 \n\n ' \
+                  f'TEXT {round(start_x_point+a3/2,1)},{round(a3/2,1)} 0.25 0 C{number}\n'
 
-def intersection(s):
+    autocad_text += text_to_add
+    start_x_point += a3+1
+    # st.text(text_to_add)
+
+def intersection(s, number):
     global start_x_point
     global autocad_text
     start_x_point = round(start_x_point,1)
@@ -454,6 +476,19 @@ def intersection(s):
     st.text(f'Размеры обкладок – {a1}мм')
     a2 = round(a1 + 0.1, 1)
     st.text(f'Размеры диэлектрика – {a2}мм')
+    text_to_add = f'COLOR ByLayer\n' \
+                  f'RECTANG {start_x_point},0 {round(start_x_point+0.9+a1, 2)},{a1}\n' \
+                  f'-hatch p ANSI31 0.05 0 {start_x_point+0.05},0.05 \n\n ' \
+                  f'RECTANG {start_x_point+0.45},-0.45 {start_x_point+0.45+a1},{a1+0.45}\n' \
+                  f'-hatch p ANSI31 0.05 90 {start_x_point+0.5},-0.06 \n\n ' \
+                  f'-hatch p ANSI31 0.05 90 {start_x_point+0.5},{a1+0.1} \n\n ' \
+                  f'-LINETYPE s ACAD_ISO02W100\n\n' \
+                  f'RECTANG {start_x_point+0.4},-0.05 {start_x_point+0.4+a2},{a2-0.05}\n' \
+                  f'-LINETYPE s ByLayer\n\n' \
+                  f'TEXT {round(start_x_point+(0.45+a1/2),1)},{round(0.9/2,1)} 0.25 0 C{number}\n'
+    autocad_text += text_to_add
+    start_x_point += a1+0.9+1
+    # st.text(text_to_add)
 
 
 def cond_sizes():
@@ -461,9 +496,9 @@ def cond_sizes():
         cond_form = st.selectbox(f'Выбирайте форму конденсатора {i+1} (рекомендуется брать из таблицы выше)',
                                 ['Пересечение', 'Перекрытие'], key=i)
         if cond_form == 'Перекрытие':
-            top_more(s=squares[i])
+            top_more(s=squares[i], number=i+1)
         elif cond_form == 'Пересечение':
-            intersection(s=squares[i])
+            intersection(s=squares[i], number=i+1)
 
 autocad_text = ''
 st.markdown(f'<h2>'
@@ -511,11 +546,11 @@ elif el == 'Конденсаторы':
     spawn_cond_table()
     st.title('Таблица материалов')
     materials = spawn_cond_materials_table()
-    error_ys = st.sidebar.selectbox('Укажите погрешность воспроизведения удельной емкость', [3,4,5])
+    error_ys = st.sidebar.selectbox('Укажите погрешность воспроизведения удельной емкости', [3,4,5])
     error_st = st.sidebar.selectbox('Укажите погрешность старения', [2,3])
     fit_materials = get_materials_for_cond()
     material = spawn_material_choice()
-    kz = st.sidebar.number_input('Укажите коэффициент запаса',  min_value=2, max_value=4)
+    kz = st.sidebar.number_input('Укажите коэффициент запаса', min_value=2, max_value=4)
 
     min_power = materials.loc[material['name']][2]
     max_power = materials.loc[material['name']][3]
