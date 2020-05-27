@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 import json
-
-
 import base64
+from acad import Autocad
+acad = Autocad()
 
 TKS_TEXT = 'Укажите ТКС'
 ERROR_TEXT = 'Укажите погрешность старения'
@@ -240,23 +240,28 @@ def spawn_cond_info():
 def rectangle(p, r, p0, kf, ykf, side, number):
     global start_x_point
     global autocad_text
+    start_x_point = round(start_x_point, 2)
     bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
-    b_delta = (0.01 + kf + 0.01) / ykf
+    b_delta = (0.01 / kf + 0.01) / ykf * 100
     b = round(max(bp, b_delta),2)
+    if number == 6:
+        print(b)
     length = round(b * kf, 2)
-
     if side != 'b':
         b,length = length,b
     st.text(f'Ширина - {b}мм, Длина - {length}мм')
+    # acad.change_color()
+    # acad.rectangle(x1=start_x_point, y1=0, x2=)
     text_to_add = f'COLOR ByLayer\n' \
-                  f'RECTANG {start_x_point},0 {round(b+start_x_point,1)},{length}\n' \
+                  f'RECTANG {start_x_point},0 {round(b+start_x_point+0.18,2)},{length}\n' \
                   f'COLOR RED\n' \
                   f'LINE {round(start_x_point+0.09,2)},0 {round(start_x_point+0.09,2)},{length}\n' \
                   f'X\n' \
-                  f'LINE {round(start_x_point+b-0.09,2)},0 {round(start_x_point+b-0.09,2)},{length}\n' \
+                  f'LINE {round(start_x_point+b+0.09,2)},0 {round(start_x_point+b+0.09,2)},{length}\n' \
                   f'X\n' \
-                  f'-hatch p dots 0.05 0 {start_x_point+0.1},0.1\n ' \
-                  f'TEXT {round(start_x_point + b / 2, 1)},{round(start_x_point + b / 2, 1)} 0.25 0 R{number}\n'
+                  f'COLOR ByLayer\n' \
+                  f'-hatch p DOTS 0.05 0 {round(start_x_point+0.15,2)},0.01 \n\n ' \
+                  f'TEXT {round(start_x_point + b / 2, 2)},{round(length / 2, 2)} 0.05 0 R{number+1}\n'
 
     st.text(text_to_add)
     autocad_text += text_to_add
@@ -268,8 +273,9 @@ def meander(p, r, p0, kf, ykf, number):
     global autocad_text
     start_x_point = round(start_x_point,1)
     bp = ((ro_square * p * 0.001) / (r * p0 * 0.01)) ** 0.5
-    b_delta = (0.01 + 0.01 / kf) / ykf
-    b = round(max(b_delta, bp), 1)
+    print(ykf)
+    b_delta = (0.01 + 0.01 / kf) / ykf*100
+    b = round(max(b_delta, bp), 2)
     l_average = b * kf
     t = b * 2
     n_optimal = int((l_average / t) ** 0.5 + 1)
@@ -330,8 +336,8 @@ def meander(p, r, p0, kf, ykf, number):
                        f' {start_x_point},{round(n_optimal*2*b,1)}\n' \
                        f'X\n' \
                        f'COLOR ByLayer\n'
-    text_to_add += f'-hatch p dots 0.05 0 {round(start_x_point+0.1,1)},0.1\n ' \
-                   f'TEXT {round(start_x_point+b/2,1)},{round(start_x_point+b/2,1)} 0.25 0 R{number}\n'
+    text_to_add += f'-hatch p dots 0.05 0 {round(start_x_point+0.1,1)},0.1 \n\n ' \
+                   f'TEXT {round(start_x_point+b/2,1)},{round(length_meandr/2,1)} 0.25 0 R{number+1}\n'
     autocad_text+= text_to_add
     st.text(text_to_add)
     start_x_point += b+1
