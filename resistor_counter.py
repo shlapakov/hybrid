@@ -3,7 +3,6 @@ import constants
 import pandas as pd
 from resistor import Resistor
 from material import Material
-from acad import Autocad
 
 class ResistorCounter:
     def __init__(self, number: int):
@@ -66,8 +65,8 @@ class ResistorCounter:
             'КФ': [res.form_coef for res in self.resistors],
             'Рекомендуемая форма': [res.form for res in self.resistors],
             'Погрешность': [res.full_error for res in self.resistors],
-            'Пригонка': ['Да' if res.full_error < 0 else 'Нет' for res in self.resistors]
-        })
+            'Пригонка': ['Да' if res.full_error < 0 else 'Нет' for res in self.resistors]},
+            index=[i for i in range(1, len(self.resistors) + 1)])
         return table
 
     def count_elements(self, material):
@@ -79,7 +78,7 @@ class ResistorCounter:
                            f'Необходимы ручные расчеты ')
             else:
                 form_index = constants.resistor_forms.index(resistor.form)
-                res_form = st.selectbox(f'Выберите форму резистора {resistor.number}.'
+                res_form = st.selectbox(f'Выберите форму резистора {resistor.number}. '
                                         f'Рекомендуется {resistor.form}',
                                         options=constants.resistor_forms,
                                         index=form_index)

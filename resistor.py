@@ -14,7 +14,7 @@ class Resistor(Element):
         self.full_error = None
         self.resistance = self.spawn_param_field('Сопротивление', value=1000,
                                                  key=f'resistance{self.number}')
-        self.acad_text = None
+        self.acad_text = ''
 
     def make_rectangle_b_more(self, ro_square, mat_power, x_pos):
         """
@@ -42,7 +42,7 @@ class Resistor(Element):
         b = round(max(bp, b_delta), 2)
         length = round(b * self.form_coef, 2)
         st.text(f'Длина резистора – {b}\nШирина резистора – {length}')
-        self.acad_text = acad.draw_rectangle(b, l, self.number)
+        self.acad_text = acad.draw_rectangle(b, length, self.number)
         return x_pos + length + 2
 
 

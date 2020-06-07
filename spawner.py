@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
 from resistor_counter import ResistorCounter
+from condensator_counter import CondensatorCounter
 
 
 class Spawner:
@@ -19,9 +20,8 @@ class Spawner:
     def get_counter(self):
         if self.type == 'Резисторы':
             counter = ResistorCounter(self.number)
-
-        # elif self.type == 'Конденсаторы':
-        #     pass #TODO: впилить конденсаторы
+        elif self.type == 'Конденсаторы':
+            counter = CondensatorCounter(self.number)
         st.header(f'Таблица "{self.type}"')
         st.table(counter.table)
         st.dataframe(counter.material_table)

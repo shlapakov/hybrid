@@ -14,3 +14,15 @@ class Material:
         self.df = self.df.rename(index = {x+1:name for x, name in enumerate(list(self.df['Название']))})
         del self.df['Название']
         return self.df
+
+    def condensator_df(self):
+        self.df = self.df.rename(index={'name': 'Название', 'mat_obk': 'Материал обкладки',
+                                  'min_power': 'Мин. мощность', 'max_power': 'Макс. мощность',
+                                  'min_c': 'Мин. уд. емк.', 'max_c': 'Макс. уд. емк.',
+                                  'diel_pron': 'Диэл. прониц.', 'e_pr': 'Епр',
+                                  'tke': 'ТКЕ'})
+        self.df = self.df.transpose()
+        self.df = self.df.rename(index={x + 1: name for x, name in enumerate(list(self.df['Название']))})
+        del self.df['Название']
+        del self.df['Материал обкладки']
+        return self.df

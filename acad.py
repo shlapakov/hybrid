@@ -11,7 +11,7 @@ class Autocad:
 
     def rectangle(self, x1:float, y1:float, x2:float, y2:float):
 
-        self.text += f'RECTANG {x1},{y1} {x2},{y2}\n'
+        self.text += f'RECTANG {round(x1,2)},{round(y1,2)} {round(x2,2)},{round(y2,2)}\n'
 
     def line(self, x1:float, y1:float, x2:float, y2:float):
         self.text += f'LINE {round(self.x_cord + x1, 2)},{round(y1, 2)}' \
@@ -22,7 +22,7 @@ class Autocad:
 
     def hatch(self, name:str = 'ANSI31', scale:float = '0.05',
               angle:int = 0, x:float = 0, y:float = 0.01):
-        self.text += f'-HATCH p {name} {scale} {angle} {x},{y} \n\n '
+        self.text += f'-HATCH p {name} {scale} {angle} {round(x,2)},{round(y,2)} \n\n '
 
     def write_text(self, x:float, y:float, text:str, height:float = 0.05, angle:int = 0):
         self.text += f'TEXT {x},{y} {height} {angle} {text}\n'
@@ -103,6 +103,38 @@ class Autocad:
                         text=f'R{number}')
         return self.text
 
+    def draw_overlap(self, a1, a2, a3, number):
+        self.change_color()
+        self.set_linetype(type_name='ACAD_ISO04W100')
+        self.rectangle(x1=self.x_cord, y1=0,
+                       x2=self.x_cord+a3, y2=a3)
+        self.set_linetype(type_name='ByLayer')
+        self.rectangle(x1=self.x_cord+0.05, y1=0.05,
+                       x2=self.x_cord + a2, y2=a2)
+        self.rectangle(x1=self.x_cord+0.1, y1=0.1,
+                       x2=self.x_cord+a1, y2=a1)
+        self.hatch(name='ANSI31', x=self.x_cord+0.15, y=0.15)
+        self.hatch(name='ANSI31', angle=90, x=self.x_cord+0.07, y=0.07)
+        self.write_text(x=self.x_cord+a3/2, y=a3/2, text=f'C{number}')
+        self.x_cord += a3+1
+        return self.text
+
+    def draw_intersection(self, a1, a2, number):
+        self.change_color()
+        self.rectangle(x1=self.x_cord, y1=0,
+                       x2=self.x_cord+0.9+a1, y2=a1)
+        self.hatch(x=self.x_cord+0.05, y=0.05)
+        self.rectangle(x1=self.x_cord+0.45, y1=-0.45,
+                       x2=self.x_cord+0.45+a1, y2=a1+0.45)
+        self.hatch(angle=90, x=self.x_cord+0.5, y=a1+0.1)
+        self.hatch(angle=90, x=self.x_cord+0.5, y=-0.06)
+        self.set_linetype('ACAD_ISO02W100')
+        self.rectangle(x1=self.x_cord+0.4, y1=-0.05,
+                       x2=self.x_cord+0.4+a2, y2=a2-0.05)
+        self.set_linetype()
+        self.write_text(x=self.x_cord+(0.45+a1/2), y=0.45, text=f'C{number}')
+        self.x_cord += a2+2
+        return self.text
 
     def create_script(self):
         self.script = base64.b64encode(self.text.encode()).decode()
