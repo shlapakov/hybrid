@@ -6,7 +6,10 @@ from material import Material
 
 class ResistorCounter:
     def __init__(self, number: int):
-
+        """
+        Base class to operate w/ resistors on scheme
+        :param number: number of resistors
+        """
         self.ro_square = st.sidebar.number_input('Укажите ро квадрат', min_value=3, step=1,
                                                  value=1000)
         self.resistors = [Resistor(i+1) for i in range(number)]
@@ -23,7 +26,12 @@ class ResistorCounter:
         self.acad_text = ''
 
 
-    def choose_material(self):
+    def choose_material(self) -> list:
+        """
+        Get material to work w/
+        :return: Parameters of chosen material
+        """
+
         fit_materials = self.material_table.loc[
             (self.material_table['Мин. R'] <= self.ro_square) &
             (self.ro_square <= self.material_table['Макс. R'])]
@@ -31,7 +39,12 @@ class ResistorCounter:
         return list(self.material_table.loc[st.selectbox('Укажите материал:',
                          fit_materials.index.values)])
 
-    def calc_errors(self, material, temperature):
+    def calc_errors(self, material: list, temperature: int):
+        """
+        Calculates full-errors for each resistor
+        :param material: dielectric material
+        :param temperature: max-working temperature of scheme
+        """
         old_error = st.selectbox('Укажите погрешность старения', [1,2])
         if material[-4] != material[-3]:
             tks = st.slider(label='Укажите ТКС',
@@ -50,6 +63,9 @@ class ResistorCounter:
             else: self.resistors[i].adjust = False
 
     def calc_forms(self):
+        """
+        Calculate forms for all resistors
+        """
         for i, resistor in enumerate(self.resistors):
             self.resistors[i].form_coef = round(resistor.resistance / self.ro_square, 2)
             if self.resistors[i].form_coef < 1:
@@ -59,7 +75,11 @@ class ResistorCounter:
             else:
                 self.resistors[i].form = 'Меандр'
 
-    def forms_table(self):
+    def forms_table(self) -> pd.DataFrame:
+        """
+        Makes pandas dataframe of forms, form coefficietns and errors.
+        :return: dataframe
+        """
         st.subheader('Таблица "Формы и погрешности"')
         table = pd.DataFrame({
             'КФ': [res.form_coef for res in self.resistors],
@@ -69,7 +89,13 @@ class ResistorCounter:
             index=[i for i in range(1, len(self.resistors) + 1)])
         return table
 
-    def count_elements(self, material):
+    def count_elements(self, material: list) -> str:
+        """
+        Makes AutoCAD text, calculate all resistors and print their info.
+        :param material: list-based parameters of selected material
+        :return: full script text
+        """
+
         x_pos = 0
         acad_text = ''
         for resistor in self.resistors:
