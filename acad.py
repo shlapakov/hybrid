@@ -1,34 +1,88 @@
 import base64
 
 class Autocad:
+
     def __init__(self, x_pos: float):
+        """
+        Class to work w/ AutoCAD
+        :param x_pos: x-coordinate of element
+        """
         self.text = ''
         self.script = None
         self.x_cord = x_pos
 
     def change_color(self, color:str = 'ByLayer'):
+        """
+        Change color of layer.
+        :param color: expected color for example 'RED', 'BLUE'
+        :return: nothing
+        """
         self.text += f'COLOR {color}\n'
 
     def rectangle(self, x1:float, y1:float, x2:float, y2:float):
-
+        """
+        Makes RECTANG command.
+        :param x1: x-coordinate of first point
+        :param y1: y-coordinate of first point
+        :param x2: x-coordinate of second point
+        :param y2: y-coordinate of second point
+        :return: nothing
+        """
         self.text += f'RECTANG {round(x1,2)},{round(y1,2)} {round(x2,2)},{round(y2,2)}\n'
 
     def line(self, x1:float, y1:float, x2:float, y2:float):
+        """
+        Makes LINE command. Works only w/ two dots. Cant make multi-line.
+        :param x1: x-coordinate of first point
+        :param y1: y-coordinate of first point
+        :param x2: x-coordinate of second point
+        :param y2: y-coordinate of second point
+        :return: nothing
+        """
         self.text += f'LINE {round(self.x_cord + x1, 2)},{round(y1, 2)}' \
                      f' {round(self.x_cord+x2, 2)},{round(y2,2)}\nX\n'
 
     def set_linetype(self, type_name:str = 'ByLayer'):
+        """
+        Makes -LINETYPE command to set type of line.
+        :param type_name: name of linetype. For example 'ACAD_ISO04W100'
+        :return:
+        """
         self.text += f'-LINETYPE s {type_name} \n'
 
     def hatch(self, name:str = 'ANSI31', scale:float = '0.05',
               angle:int = 0, x:float = 0, y:float = 0.01):
+        """
+        Makes HATCH command. Working only w/ pick-point.
+        :param name: type of hatch. For example 'ANSI31'
+        :param scale: scale of hatch.
+        :param angle: angle of hatch.
+        :param x: x-coordinate of pick-point
+        :param y: y-coordinate of pick-point
+        :return:
+        """
         self.text += f'-HATCH p {name} {scale} {angle} {round(x,2)},{round(y,2)} \n\n '
 
     def write_text(self, x:float, y:float, text:str, height:float = 0.05, angle:int = 0):
-        self.text += f'TEXT {x},{y} {height} {angle} {text}\n'
+        """
+        Makes TEXT command w/ custom text.
+        :param x: x-coordinate of start text point.
+        :param y: x-coordinate of start text point.
+        :param text: text to draw
+        :param height: height of text
+        :param angle: angle of text
+        :return:
+        """
+        self.text += f'TEXT {round(x, 2)},{round(y, 2)} {height} {angle} {text}\n'
 
     def draw_rectangle(self, b, length, number):
-
+        """
+        Makes rectangle-based resistor
+        :param b: width of resistor
+        :param length: length of resistor
+        :param number: positional number of resistor
+        :return: script commands
+        """
         self.change_color()
         self.rectangle(x1=self.x_cord, y1=0,
                        x2=round(self.x_cord+b+0.18,2), y2=length)
@@ -45,6 +99,14 @@ class Autocad:
         return self.text
 
     def draw_meander(self, b, n, length, number):
+        """
+        Makes meander resistor
+        :param b: width of resistor
+        :param n: count of z-elements
+        :param length: length of resistor
+        :param number: positional number of resistor
+        :return: script commands
+        """
         self.change_color()
         self.line(x1=b, y1=0,
                   x2=b, y2=-2*b)
@@ -104,6 +166,14 @@ class Autocad:
         return self.text
 
     def draw_overlap(self, a1, a2, a3, number):
+        """
+        Makes overlap-based capacitor
+        :param a1: Smallest side
+        :param a2: Second side
+        :param a3: Biggest side
+        :param number: Positional number of capacitor
+        :return: script commands
+        """
         self.change_color()
         self.set_linetype(type_name='ACAD_ISO04W100')
         self.rectangle(x1=self.x_cord, y1=0,
@@ -120,6 +190,13 @@ class Autocad:
         return self.text
 
     def draw_intersection(self, a1, a2, number):
+        """
+        Make intersection-based capacitor
+        :param a1: smallest side
+        :param a2: biggest side
+        :param number: Positional number of capacitor
+        :return: script commands
+        """
         self.change_color()
         self.rectangle(x1=self.x_cord, y1=0,
                        x2=self.x_cord+0.9+a1, y2=a1)
@@ -136,7 +213,5 @@ class Autocad:
         self.x_cord += a2+2
         return self.text
 
-    def create_script(self):
-        self.script = base64.b64encode(self.text.encode()).decode()
 
 
