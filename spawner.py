@@ -1,11 +1,14 @@
 import streamlit as st
 import base64
-from resistor_counter import ResistorCounter
-from condensator_counter import CondensatorCounter
+from utilities.resistor_counter import ResistorCounter
+from utilities.capacitor_counter import CapacitorCounter
 
 
 class Spawner:
     def __init__(self):
+        """
+        Base application class unified for
+        """
         st.sidebar.header('Параметры схемы')
         self.temperature = st.sidebar.number_input('Укажите максимальную рабочую'
                                                    ' температуру схемы',
@@ -15,13 +18,12 @@ class Spawner:
         self.number = st.sidebar.number_input('Укажите количество элементов',
                                               min_value=1,
                                               value=1)
-        # TODO: Добавить метод изготовления ИМС
 
     def get_counter(self):
         if self.type == 'Резисторы':
             counter = ResistorCounter(self.number)
         elif self.type == 'Конденсаторы':
-            counter = CondensatorCounter(self.number)
+            counter = CapacitorCounter(self.number)
         st.header(f'Таблица "{self.type}"')
         st.table(counter.table)
         st.dataframe(counter.material_table)

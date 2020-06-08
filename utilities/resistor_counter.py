@@ -1,8 +1,8 @@
 import streamlit as st
-import constants
+from utilities import constants
 import pandas as pd
-from resistor import Resistor
-from material import Material
+from elements.resistor import Resistor
+from utilities.material import Material
 
 class ResistorCounter:
     def __init__(self, number: int):
@@ -22,7 +22,7 @@ class ResistorCounter:
             'Погрешность': [resistor.error for resistor in self.resistors]},
             index=[i for i in range(1, len(self.resistors)+1)])
         st.warning(f'Рекомендуемое значение ро квадрат {self.optimal_param}')
-        self.material_table = Material('materials.json').resistance_df()
+        self.material_table = Material('/materials/resist_materials.json').resistance_df()
         self.acad_text = ''
 
 
