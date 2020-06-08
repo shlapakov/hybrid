@@ -6,7 +6,11 @@ from acad import Autocad
 
 
 class Resistor(Element):
-    def __init__(self, number):
+    def __init__(self, number: int):
+        """
+        Class to calculate resistors
+        :param number: positional number of resistor
+        """
         super().__init__(number, 'Резистор')
         self.adjust = None
         self.form_coef = None
@@ -16,9 +20,13 @@ class Resistor(Element):
                                                  key=f'resistance{self.number}')
         self.acad_text = ''
 
-    def make_rectangle_b_more(self, ro_square, mat_power, x_pos):
+    def make_rectangle_b_more(self, ro_square: float, mat_power: float, x_pos: float) -> float:
         """
-        make rectangle resistor w/ b-side more than l-side
+        Calculate rectangle-based resistor that width is bigger than length.
+        :param ro_square: ro_square of material
+        :param mat_power: material power
+        :param x_pos: bottom-left point of element at AutoCAD sheet
+        :return: x_pos for next element
         """
         acad = Autocad(x_pos)
         bp = ((ro_square * self.power * 0.001) /
@@ -30,10 +38,13 @@ class Resistor(Element):
         self.acad_text = acad.draw_rectangle(b, length, self.number)
         return x_pos + b + 2
 
-    def make_rectangle_l_more(self, ro_square, mat_power, x_pos):
+    def make_rectangle_l_more(self, ro_square: float, mat_power: float, x_pos: float) -> float:
         """
-        make rectangle resistor w/ l-side more than b-side
-
+        Calculate rectangle-based resistor that width is smaller than length.
+        :param ro_square: ro_square of material
+        :param mat_power: material power
+        :param x_pos: bottom-left point of element at AutoCAD sheet
+        :return: x_pos for next element
         """
         acad = Autocad(x_pos)
         bp = ((self.resistance * self.power * 0.001) /
@@ -46,9 +57,9 @@ class Resistor(Element):
         return x_pos + length + 2
 
 
-    def make_meandr(self, ro_square, mat_power, x_pos):
+    def make_meandr(self, ro_square: float, mat_power: float, x_pos: float) -> float:
         """
-        make meander resistor
+        Calculate meander-based resistor that width is smaller than length.
         :param ro_square: ro_square from scheme
         :param mat_power: estimated power of material
         :param x_pos: position of aCAD cursor
