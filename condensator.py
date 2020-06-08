@@ -5,6 +5,10 @@ from acad import Autocad
 
 class Condensator(Element):
     def __init__(self, number):
+        """
+        Class to calculate capacitors
+        :param number: positional number of capacitor
+        """
         super().__init__(number, 'Конденсатор')
         self.capacity = self.spawn_param_field('Емкость', value=500,
                                                key=f'capacity{self.number}')
@@ -12,10 +16,11 @@ class Condensator(Element):
         self.form = None
         self.square = 0
 
-    def make_overlap(self, x_pos):
+    def make_overlap(self, x_pos) -> float:
         """
-        :param x_pos:
-        :return:
+        Calculate overlap-based capacitor
+        :param x_pos: bottom-left point of element at AutoCAD sheet
+        :return: x_pos for next element
         """
         acad = Autocad(x_pos)
         a1 = round(self.square ** 0.5, 2)
@@ -27,7 +32,12 @@ class Condensator(Element):
         self.acad_text = acad.draw_overlap(a1, a2, a3, self.number)
         return x_pos + a3 + 2
 
-    def make_intersection(self, x_pos):
+    def make_intersection(self, x_pos) -> float:
+        """
+        Calculate intersection-based capacitor
+        :param x_pos: bottom-left point of element at AutoCAD sheet
+        :return: x_pos for next element
+        """
         acad = Autocad(x_pos)
         self.square *= 1.15
         self.square = round(self.square, 2)
