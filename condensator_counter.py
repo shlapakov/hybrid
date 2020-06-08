@@ -6,6 +6,10 @@ from condensator import Condensator
 
 class CondensatorCounter:
     def __init__(self, number: int):
+        """
+        Base class to operate w/ capacitors on scheme
+        :param number: number of capacitors
+        """
         self.c0 = 0
         self.condensators = [Condensator(i+1) for i in range(number)]
         self.work_power = 0
@@ -19,11 +23,20 @@ class CondensatorCounter:
         self.kz = st.sidebar.number_input('Укажите коэффициент запаса', min_value=2, max_value=4)
 
 
-    def choose_material(self):
+    def choose_material(self) -> list:
+        """
+        Get material to work w/
+        :return: Parameters of chosen material
+        """
         return list(self.material_table.loc
                     [st.selectbox('Укажите материал:', self.material_table.index.values)])
 
-    def calc_errors(self, material, temperature):
+    def calc_errors(self, material: list, temperature: int):
+        """
+        Calculates errors and base capacity
+        :param material: dielectric material
+        :param temperature: max-working temperature of scheme
+        """
         self.work_power = st.slider('Укажите рабочее напряжение',
                                    min_value=material[2], max_value=material[3], value=material[2])
         error_ys = st.sidebar.selectbox('Укажите погрешность воспроизведения удельной емкости', [3, 4, 5])
@@ -46,12 +59,19 @@ class CondensatorCounter:
 
 
     def calc_forms(self):
+        """
+        Calculate forms for all capacitors
+        """
         for i, condensator in enumerate(self.condensators):
             self.condensators[i].square = round(condensator.capacity / self.c0, 2)
             self.condensators[i].form = 'Перекрытие' \
                 if self.condensators[i].square >= 5 else 'Пересечение'
 
-    def forms_table(self):
+    def forms_table(self) -> pd.DataFrame:
+        """
+        Makes pandas dataframe of forms and squares.
+        :return: dataframe
+        """
         st.subheader('Таблица "Площади и формы"')
         table = pd.DataFrame({
             'Площадь': [condensator.square for condensator in self.condensators],
@@ -59,7 +79,12 @@ class CondensatorCounter:
             index=[i for i in range(1, len(self.condensators)+1)])
         return table
 
-    def count_elements(self, material):
+    def count_elements(self, material) -> str:
+        """
+        Makes AutoCAD text, calculate all capacitors and print their info.
+        :param material:
+        :return: full script text
+        """
         x_pos = 0
         acad_text = ''
         if self.ysdop < 0:
